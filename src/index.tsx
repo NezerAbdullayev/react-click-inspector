@@ -1,7 +1,7 @@
 import React, { CSSProperties, FC, useState } from 'react';
-import { DevInspectorProvider } from '../context/DevInspectorProvider';
-import { useIsLocalhost } from '../hooks';
-import { Popup } from './Popup';
+import { Popup } from './components';
+import { useIsLocalhost } from './hooks/useIsLocalhost';
+import { DevInspectorProvider } from './context';
 
 export interface ISettingsModalProps {
   icon?: React.ReactNode;
