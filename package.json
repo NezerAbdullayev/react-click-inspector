@@ -1,0 +1,35 @@
+{
+  "name": "react-click-inspector", 
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.tsx --format cjs,esm --dts",
+    "prepublishOnly": "npm run build" 
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/react-click-inspector.git"
+  },
+  "homepage": "https://github.com/your-username/react-click-inspector#readme",
+  "keywords": [
+    "react",
+    "inspector",
+    "click",
+    "debug",
+    "developer-tool",
+    "devtools",
+    "react-component"
+  ],
+  "author": "Sənin Adın <email@example.com>",
+  "license": "MIT",
+  "description": "A lightweight React tool to inspect clicks and element details for debugging UI events."
+}
