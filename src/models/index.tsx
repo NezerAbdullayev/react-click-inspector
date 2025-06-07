@@ -6,7 +6,6 @@ export interface ISettingsModalProps {
   icon?: React.ReactNode;
   toggleBtnCss?: CSSProperties;
   modalCss?: CSSProperties;
-
 }
 
 export interface IReactClickInspector extends ISettingsModalProps {
