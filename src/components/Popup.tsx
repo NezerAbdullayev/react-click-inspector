@@ -7,7 +7,7 @@ interface PopupProps {
 
 export const Popup: React.FC<PopupProps> = ({ message, visible }) => {
   if (!visible) return null;
-  
+
   return (
     <div
       style={{

@@ -1,6 +1,6 @@
 import React, { FC, useState, CSSProperties } from 'react';
 import { useDevInspector } from '../hooks';
-import { ISettingsModalProps } from '../../../components/ReactClickInspector';
+import { ISettingsModalProps } from '../models';
 
 export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleBtnCss }) => {
   const [isActive, setIsActive] = useState(false);
