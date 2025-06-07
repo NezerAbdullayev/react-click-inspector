@@ -34,5 +34,9 @@
   },
   "license": "MIT",
   "author": "Nezer Abdullayev",
-  "description": "A lightweight React tool to inspect clicks and element details for debugging UI events."
+  "description": "A lightweight React tool to inspect clicks and element details for debugging UI events.",
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  }
 }
