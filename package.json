@@ -1,9 +1,16 @@
 {
   "name": "react-click-inspector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
-  "module": "dist/index.es.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -17,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NezerAbdullayev/react-click-inspector.git"
+    "url": "git+https://github.com/NezerAbdullayev/react-click-inspector.git"
   },
   "homepage": "https://github.com/NezerAbdullayev/react-click-inspector#readme",
   "keywords": [
@@ -34,5 +41,9 @@
   },
   "license": "MIT",
   "author": "Nezer Abdullayev",
-  "description": "A lightweight React tool to inspect clicks and element details for debugging UI events."
+  "description": "A lightweight React tool to inspect clicks and element details for debugging UI events.",
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  }
 }
