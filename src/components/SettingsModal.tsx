@@ -3,7 +3,7 @@ import { useDevInspector, useWindowsWith } from '../hooks';
 import { ISettingsModalProps } from '../models';
 
 export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleBtnCss }) => {
-  const modalWidth = useWindowsWith()
+  const isMobil = useWindowsWith()
   const [isActive, setIsActive] = useState(false);
 
   const { IDEType, logOnly, setIDEType, setLogOnly, setOpenInVSCode, openInVSCode } =
@@ -19,6 +19,8 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
     setOpenInVSCode(prev => !prev);
     if (!openInVSCode) setIsActive(prev => !prev);
   };
+
+  const modalWidth = isMobil ? '220' : '300';
 
   const toggleButtonStyle: CSSProperties = {
     position: 'fixed',
