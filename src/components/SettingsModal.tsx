@@ -1,8 +1,9 @@
 import React, { FC, useState, CSSProperties } from 'react';
-import { useDevInspector } from '../hooks';
+import { useDevInspector, useWindowsWith } from '../hooks';
 import { ISettingsModalProps } from '../models';
 
 export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleBtnCss }) => {
+  const modalWidth = useWindowsWith()
   const [isActive, setIsActive] = useState(false);
 
   const { IDEType, logOnly, setIDEType, setLogOnly, setOpenInVSCode, openInVSCode } =
@@ -36,8 +37,8 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
   const modalStyle: CSSProperties = {
     position: 'fixed',
     bottom: 80,
-    right: isActive ? 20 : -300,
-    width: 300,
+    right: isActive ? 20 : -modalWidth,
+    width: modalWidth,
     height: 'auto',
     background: '#ffffff',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
