@@ -9,6 +9,10 @@ A lightweight React component for inspecting click events within your applicatio
 - Supports custom handlers
 - Works with any React application
 
+## 🖼 Screenshot
+
+![Click Inspector Demo](./image.png)
+
 ## 📦 Installation
 
 ```bash
