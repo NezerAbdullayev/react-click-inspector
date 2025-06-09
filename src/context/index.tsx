@@ -1,4 +1,4 @@
-import React, { createContext, useState, FC, Dispatch, SetStateAction } from 'react';
+import React, { createContext, useState, FC, Dispatch, SetStateAction, CSSProperties } from 'react';
 import { SettingsModal } from '../components';
 import { useGetPatchClickedElement } from '../hooks';
 import { IdeType } from '../utils';
@@ -30,23 +30,29 @@ export const DevInspectorProvider: FC<IDevInspectorProvider> = ({
     IDEType,
   });
 
+  const cursorStyle: CSSProperties = {
+    cursor: logOnly || openInVSCode ? 'crosshair' : 'default',
+  }
+
   return (
-    <DevInspectorContext.Provider
-      value={{
-        logOnly,
-        IDEType,
-        visbTool,
-        setLogOnly,
-        setIDEType,
-        setVisbTool,
-        openInVSCode,
-        openInWebStorm,
-        setOpenInVSCode,
-        setOpenInWebStorm,
-      }}
-    >
-      {children}
-      <SettingsModal {...{ icon, toggleBtnCss, modalCss }} />
-    </DevInspectorContext.Provider>
+    <div style={cursorStyle}>
+      <DevInspectorContext.Provider
+        value={{
+          logOnly,
+          IDEType,
+          visbTool,
+          setLogOnly,
+          setIDEType,
+          setVisbTool,
+          openInVSCode,
+          openInWebStorm,
+          setOpenInVSCode,
+          setOpenInWebStorm,
+        }}
+      >
+        {children}
+        <SettingsModal {...{ icon, toggleBtnCss, modalCss }} />
+      </DevInspectorContext.Provider>
+    </div>
   );
 };
