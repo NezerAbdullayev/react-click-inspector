@@ -3,11 +3,12 @@ import { useDevInspector, useWindowsWith } from '../hooks';
 import { ISettingsModalProps } from '../models';
 
 export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleBtnCss }) => {
-  const isMobil = useWindowsWith()
-  const [isActive, setIsActive] = useState(false);
-
   const { IDEType, logOnly, setIDEType, setLogOnly, setOpenInVSCode, openInVSCode } =
     useDevInspector();
+  const [isActive, setIsActive] = useState(false);
+  const isSmallScreen = useWindowsWith()
+  const modalWidth = isSmallScreen ? 220 : 300;
+  const isVSCode = IDEType !== 'webstorm';
 
   const onLogOnlyToggle = () => {
     setLogOnly(prev => !prev);
@@ -20,8 +21,7 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
     if (!openInVSCode) setIsActive(prev => !prev);
   };
 
-  const modalWidth = isMobil ? '220' : '300';
-
+  //  style
   const toggleButtonStyle: CSSProperties = {
     position: 'fixed',
     bottom: 20,
@@ -39,7 +39,7 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
   const modalStyle: CSSProperties = {
     position: 'fixed',
     bottom: 80,
-    right: isActive ? 20 : -modalWidth,
+    right: isActive ? 20 : -modalWidth - 80,
     width: modalWidth,
     height: 'auto',
     background: '#ffffff',
@@ -53,8 +53,6 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
     transition: 'right 0.3s ease-in-out',
     ...modalCss,
   };
-
-  const isVSCode = IDEType !== 'webstorm';
 
   return (
     <div style={{ position: 'relative' }} data-id="continue-element_debbug">
@@ -75,13 +73,13 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
       </button>
 
       <div style={modalStyle}>
-        <h2 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Settings</h2>
+        <h2 style={{ marginBottom: isSmallScreen ? 6 : 12, fontSize: isSmallScreen ? 12 : 16 }}>Settings</h2>
 
         <button
           type="button"
           onClick={onLogOnlyToggle}
           style={{
-            padding: '8px 16px',
+            padding: isSmallScreen ? "4px 8px" : '8px 16px',
             borderRadius: 6,
             border: 'none',
             backgroundColor: logOnly ? '#4caf50' : '#e0e0e0',
@@ -89,7 +87,8 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
             fontWeight: 'bold',
             cursor: 'pointer',
             transition: 'background-color 0.2s ease',
-            marginBottom: 12,
+            marginBottom: isSmallScreen ? 6 : 12,
+            fontSize: isSmallScreen ? 12 : 14,
           }}
         >
           Copy file path to Clipboard
@@ -100,7 +99,7 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
             htmlFor="vsCode"
             style={{
               flex: 1,
-              padding: '10px 14px',
+              padding: isSmallScreen ? "5px 7px" : '10px 14px',
               borderRadius: 6,
               border: `2px solid ${openInVSCode ? '#007acc' : '#ccc'}`,
               backgroundColor: openInVSCode ? '#e3f2fd' : '#ffffff',
@@ -109,6 +108,7 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
               fontWeight: openInVSCode ? 600 : 400,
               transition: 'all 0.2s ease',
               userSelect: 'none',
+              fontSize: isSmallScreen ? 12 : 16,
             }}
           >
             <input
