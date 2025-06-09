@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
-export const useWindowsWith = (): number => {
-  const [modalWidth, setModalWidth] = useState(300);
+export const useWindowsWith = (): boolean => {
+  const [modalWidth, setModalWidth] = useState<boolean>(false);
+
+  const updateWidth = () => {
+    setModalWidth(window.innerWidth < 1500);
+  };
 
   useEffect(() => {
-    const updateWidth = () => {
-      setModalWidth(window.innerWidth < 1400 ? 220 : 300);
-    };
-
     updateWidth();
 
     window.addEventListener('resize', updateWidth);
