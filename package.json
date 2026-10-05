@@ -43,6 +43,10 @@
   "author": "Nezer Abdullayev",
   "description": "A lightweight React tool to inspect clicks and element details for debugging UI events.",
   "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   }

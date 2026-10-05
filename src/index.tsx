@@ -1,5 +1,8 @@
 // main entry point for the React Click Inspector package
 
-export { ReactClickInspector } from "./components"
+import { ReactClickInspector } from "./components"
+
+export { ReactClickInspector }
+export default ReactClickInspector
 
 export type { IReactClickInspector } from "./models"
