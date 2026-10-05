@@ -1,10 +1,17 @@
 export const IGNORE_ATTRIBUTE_VALUE = 'rci-ignore';
 
+export type ToastTone = 'success' | 'info' | 'error';
+
+export const TOAST_DURATION_MS = 2000;
+export const ERROR_TOAST_DURATION_MS = 4000;
+
 export interface IOverlay {
   host: HTMLElement;
   show: (element: Element, label: string) => void;
   hide: () => void;
+  toast: (text: string, tone: ToastTone) => void;
   destroy: () => void;
+  dispose: () => void;
 }
 
 const OVERLAY_STYLES = `
@@ -28,6 +35,25 @@ const OVERLAY_STYLES = `
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(560px, calc(100vw - 32px));
+    padding: 8px 14px;
+    border-radius: 6px;
+    background: #20232a;
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    font: 13px/18px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    text-align: center;
+  }
+  .toast[data-tone='success'] { border-left: 4px solid #4caf50; }
+  .toast[data-tone='info'] { border-left: 4px solid #61dafb; }
+  .toast[data-tone='error'] { border-left: 4px solid #f44336; }
   [hidden] { display: none; }
 `;
 
@@ -49,10 +75,31 @@ export const createOverlay = (doc: Document): IOverlay => {
   label.className = 'label';
   label.hidden = true;
 
-  shadow.append(style, box, label);
+  const toastEl = doc.createElement('div');
+  toastEl.className = 'toast';
+  toastEl.setAttribute('role', 'status');
+  toastEl.hidden = true;
+
+  shadow.append(style, box, label, toastEl);
+
+  let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const attach = () => {
+    if (!host.isConnected) doc.documentElement.appendChild(host);
+  };
+
+  const detachIfIdle = () => {
+    if (box.hidden && toastEl.hidden) host.remove();
+  };
+
+  const clearToast = () => {
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = null;
+    toastEl.hidden = true;
+  };
 
   const show = (element: Element, text: string) => {
-    if (!host.isConnected) doc.documentElement.appendChild(host);
+    attach();
 
     const rect = element.getBoundingClientRect();
     box.style.top = `${rect.top}px`;
@@ -74,10 +121,31 @@ export const createOverlay = (doc: Document): IOverlay => {
     label.hidden = true;
   };
 
+  const toast = (text: string, tone: ToastTone) => {
+    clearToast();
+    attach();
+    toastEl.textContent = text;
+    toastEl.dataset.tone = tone;
+    toastEl.hidden = false;
+    toastTimer = setTimeout(
+      () => {
+        clearToast();
+        detachIfIdle();
+      },
+      tone === 'error' ? ERROR_TOAST_DURATION_MS : TOAST_DURATION_MS,
+    );
+  };
+
   const destroy = () => {
     hide();
+    detachIfIdle();
+  };
+
+  const dispose = () => {
+    hide();
+    clearToast();
     host.remove();
   };
 
-  return { host, show, hide, destroy };
+  return { host, show, hide, toast, destroy, dispose };
 };

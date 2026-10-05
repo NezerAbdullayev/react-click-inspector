@@ -1,10 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import {
   createPageInspector,
   IPageInspector,
   NO_FIBER_LOG,
   NO_SOURCE_WARNING,
 } from '../../src/page/inspector';
+import { ERROR_TOAST_DURATION_MS, TOAST_DURATION_MS } from '../../src/page/overlay';
+import { EDITOR_FAILED_TOAST, FAIL_TOAST, SUCCESS_TOAST } from '../../src/page/toastText';
 import { PageToBridge } from '../../src/shared/messages';
 import { DEFAULT_SETTINGS } from '../../src/shared/settings';
 import { attachFiber, createFiber, ITestFiber, markContainer, source } from './fiberHelpers';
@@ -15,6 +17,8 @@ function App() {
 
 let inspector: IPageInspector | null = null;
 let posted: PageToBridge[] = [];
+let writeText: Mock<(text: string) => Promise<void>>;
+let fetchMock: Mock<(input: string) => Promise<Response>>;
 
 const start = () => {
   inspector = createPageInspector(window, { detectionTimeoutMs: 200, detectionDebounceMs: 10 });
@@ -43,6 +47,13 @@ const overlayHost = () =>
     element => element.shadowRoot,
   );
 
+const highlightBox = () => overlayHost()?.shadowRoot?.querySelector<HTMLElement>('.box') ?? null;
+
+const visibleToast = () => {
+  const element = overlayHost()?.shadowRoot?.querySelector<HTMLElement>('.toast');
+  return element && !element.hidden ? { text: element.textContent, tone: element.dataset.tone } : null;
+};
+
 const cursorStyle = () =>
   Array.from(document.querySelectorAll('style')).find(style => style.textContent?.includes('crosshair'));
 
@@ -61,18 +72,27 @@ const sourcedFiber = () => {
   return createFiber(source('/app/src/App.tsx', 12), owner, { type: 'button', _debugOwner: owner });
 };
 
+const textResponse = (status = 200) =>
+  new Response('', { status, headers: { 'content-type': 'text/plain' } });
+
 beforeEach(() => {
   posted = [];
   vi.spyOn(window, 'postMessage').mockImplementation((message: unknown) => {
     posted.push(message as PageToBridge);
   });
+  writeText = vi.fn(async () => undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  fetchMock = vi.fn(async () => textResponse());
+  vi.stubGlobal('fetch', fetchMock);
 });
 
 afterEach(() => {
   inspector?.destroy();
   inspector = null;
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   vi.useRealTimers();
+  Reflect.deleteProperty(navigator, 'clipboard');
   document.body.innerHTML = '';
 });
 
@@ -201,7 +221,7 @@ describe('mode transitions', () => {
 });
 
 describe('click results', () => {
-  it('sends the source and returns to null on success, blocking the app handler', () => {
+  it('sends the source and returns to null on success, blocking the app handler', async () => {
     const button = renderApp(sourcedFiber());
     start();
     const onClick = vi.fn();
@@ -212,11 +232,12 @@ describe('click results', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(onClick).not.toHaveBeenCalled();
+    expect(inspector!.getStatus().mode).toBeNull();
+    expect(lastStatus()).toMatchObject({ mode: null });
+    await vi.waitFor(() => expect(results()).toHaveLength(1));
     expect(results()).toEqual([
       { source: 'rci', type: 'result', ok: true, mode: 'webstorm', filePath: '/app/src/App.tsx', line: 12 },
     ]);
-    expect(inspector!.getStatus().mode).toBeNull();
-    expect(lastStatus()).toMatchObject({ mode: null });
   });
 
   it('stays active on no-fiber and logs like the npm package', () => {
@@ -230,9 +251,11 @@ describe('click results', () => {
     expect(results()).toEqual([{ source: 'rci', type: 'result', ok: false, mode: 'copy', reason: 'no-fiber' }]);
     expect(log).toHaveBeenCalledWith(NO_FIBER_LOG, 'color: gray');
     expect(inspector!.getStatus().mode).toBe('copy');
+    expect(visibleToast()).toBeNull();
+    expect(writeText).not.toHaveBeenCalled();
   });
 
-  it('stays active on no-source and warns with the npm package text', () => {
+  it('stays active on no-source, warns with the npm package text and shows a toast', () => {
     renderApp(createFiber(null, createFiber(null)));
     start();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -244,9 +267,11 @@ describe('click results', () => {
     expect(warn).toHaveBeenCalledWith(NO_SOURCE_WARNING);
     expect(NO_SOURCE_WARNING).toContain('React 19 is not supported');
     expect(inspector!.getStatus().mode).toBe('vscode');
+    expect(FAIL_TOAST['no-source']).toBe('No source info (React 19 or production build?)');
+    expect(visibleToast()).toEqual({ text: FAIL_TOAST['no-source'], tone: 'info' });
   });
 
-  it('stays active on all-ignored', () => {
+  it('stays active on all-ignored and shows a toast', () => {
     renderApp(createFiber(source('/app/node_modules/ui/Button.tsx', 4)));
     start();
     send({ source: 'rci', type: 'settings', settings: { ...DEFAULT_SETTINGS, ignoredPaths: ['node_modules'] } });
@@ -256,9 +281,12 @@ describe('click results', () => {
 
     expect(results()).toEqual([{ source: 'rci', type: 'result', ok: false, mode: 'copy', reason: 'all-ignored' }]);
     expect(inspector!.getStatus().mode).toBe('copy');
+    expect(FAIL_TOAST['all-ignored']).toBe('All matching files are in ignoredPaths');
+    expect(visibleToast()).toEqual({ text: FAIL_TOAST['all-ignored'], tone: 'info' });
+    expect(writeText).not.toHaveBeenCalled();
   });
 
-  it('skips ignored paths and resolves to the next source', () => {
+  it('skips ignored paths and resolves to the next source', async () => {
     const app = createFiber(source('/app/src/App.tsx', 20));
     renderApp(createFiber(source('/app/node_modules/ui/Button.tsx', 4), app));
     start();
@@ -267,6 +295,8 @@ describe('click results', () => {
 
     click(document.getElementById('target')!);
 
+    expect(writeText).toHaveBeenCalledWith('/app/src/App.tsx');
+    await vi.waitFor(() => expect(results()).toHaveLength(1));
     expect(results()).toEqual([
       { source: 'rci', type: 'result', ok: true, mode: 'copy', filePath: '/app/src/App.tsx', line: 20 },
     ]);
@@ -286,6 +316,162 @@ describe('click results', () => {
     expect(onClick).toHaveBeenCalled();
     expect(results()).toHaveLength(0);
     expect(inspector!.getStatus().mode).toBe('copy');
+  });
+});
+
+describe('actions on click', () => {
+  it('copies the path synchronously inside the click handler and shows "Copied"', async () => {
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'set-mode', mode: 'copy' });
+
+    click(document.getElementById('target')!);
+
+    expect(writeText).toHaveBeenCalledWith('/app/src/App.tsx');
+    await vi.waitFor(() => expect(visibleToast()).toEqual({ text: 'Copied', tone: 'success' }));
+    expect(results()).toEqual([
+      { source: 'rci', type: 'result', ok: true, mode: 'copy', filePath: '/app/src/App.tsx', line: 12 },
+    ]);
+  });
+
+  it('opens a vscode:// link synchronously inside the click handler', async () => {
+    const hrefs: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      hrefs.push(this.href);
+    });
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'set-mode', mode: 'vscode' });
+
+    click(document.getElementById('target')!);
+
+    expect(hrefs).toEqual(['vscode://file//app/src/App.tsx:12:1']);
+    expect(SUCCESS_TOAST.vscode).toBe('Opening in VS Code');
+    await vi.waitFor(() => expect(visibleToast()).toEqual({ text: SUCCESS_TOAST.vscode, tone: 'success' }));
+  });
+
+  it('requests the configured open-in-editor path for WebStorm', async () => {
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'settings', settings: { ...DEFAULT_SETTINGS, openInEditorPath: '/custom-open' } });
+    send({ source: 'rci', type: 'set-mode', mode: 'webstorm' });
+
+    click(document.getElementById('target')!);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${location.origin}/custom-open?file=${encodeURIComponent('/app/src/App.tsx:12:1')}`,
+    );
+    await vi.waitFor(() => expect(visibleToast()).toEqual({ text: 'Opening in WebStorm', tone: 'success' }));
+  });
+
+  it.each([
+    ['a 404 response', () => textResponse(404)],
+    [
+      'an index.html SPA fallback',
+      () => new Response('<!doctype html>', { status: 200, headers: { 'content-type': 'text/html' } }),
+    ],
+  ])('shows the WebStorm error toast and stays off on %s', async (_, createResponse) => {
+    fetchMock.mockImplementation(async () => createResponse());
+    const error = vi.spyOn(console, 'error');
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'set-mode', mode: 'webstorm' });
+
+    click(document.getElementById('target')!);
+
+    await vi.waitFor(() => expect(results()).toHaveLength(1));
+    expect(results()).toEqual([
+      { source: 'rci', type: 'result', ok: false, mode: 'webstorm', reason: 'editor-request-failed' },
+    ]);
+    expect(EDITOR_FAILED_TOAST.webstorm).toBe(
+      'Dev server does not support /__open-in-editor (Vite and Rsbuild do). ' +
+        'Set LAUNCH_EDITOR=webstorm if VS Code opens instead.',
+    );
+    expect(visibleToast()).toEqual({ text: EDITOR_FAILED_TOAST.webstorm, tone: 'error' });
+    expect(inspector!.getStatus().mode).toBeNull();
+    expect(error).not.toHaveBeenCalled();
+  });
+
+  it('shows the error toast when copying fails', async () => {
+    writeText.mockRejectedValue(new Error('denied'));
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'set-mode', mode: 'copy' });
+
+    click(document.getElementById('target')!);
+
+    await vi.waitFor(() => expect(results()).toHaveLength(1));
+    expect(results()).toEqual([
+      { source: 'rci', type: 'result', ok: false, mode: 'copy', reason: 'editor-request-failed' },
+    ]);
+    expect(visibleToast()).toEqual({ text: EDITOR_FAILED_TOAST.copy, tone: 'error' });
+  });
+});
+
+describe('toast', () => {
+  it('hides a success toast after 2 seconds and removes the overlay host', async () => {
+    vi.useFakeTimers();
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'set-mode', mode: 'copy' });
+
+    click(document.getElementById('target')!);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(visibleToast()).toEqual({ text: 'Copied', tone: 'success' });
+    expect(overlayHost()!.dataset.id).toBe('rci-ignore');
+
+    vi.advanceTimersByTime(TOAST_DURATION_MS - 1);
+    expect(visibleToast()).not.toBeNull();
+    vi.advanceTimersByTime(1);
+    expect(overlayHost()).toBeUndefined();
+  });
+
+  it('keeps an error toast longer', async () => {
+    vi.useFakeTimers();
+    fetchMock.mockImplementation(async () => textResponse(404));
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'set-mode', mode: 'webstorm' });
+
+    click(document.getElementById('target')!);
+    await vi.advanceTimersByTimeAsync(TOAST_DURATION_MS);
+    expect(visibleToast()?.tone).toBe('error');
+
+    vi.advanceTimersByTime(ERROR_TOAST_DURATION_MS - TOAST_DURATION_MS);
+    expect(overlayHost()).toBeUndefined();
+  });
+
+  it('keeps the highlight when a toast expires while the mode is active', () => {
+    vi.useFakeTimers();
+    renderApp(createFiber(null, createFiber(null)));
+    start();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    send({ source: 'rci', type: 'set-mode', mode: 'copy' });
+    const target = document.getElementById('target')!;
+
+    click(target);
+    target.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    vi.advanceTimersByTime(TOAST_DURATION_MS);
+
+    expect(visibleToast()).toBeNull();
+    expect(highlightBox()!.hidden).toBe(false);
+  });
+
+  it('does not post or show a toast after destroy', async () => {
+    let resolveFetch: (response: Response) => void = () => {};
+    fetchMock.mockImplementation(() => new Promise<Response>(resolve => (resolveFetch = resolve)));
+    renderApp(sourcedFiber());
+    start();
+    send({ source: 'rci', type: 'set-mode', mode: 'webstorm' });
+    click(document.getElementById('target')!);
+
+    inspector!.destroy();
+    inspector = null;
+    resolveFetch(textResponse());
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(results()).toHaveLength(0);
+    expect(overlayHost()).toBeUndefined();
   });
 });
 
@@ -312,8 +498,8 @@ describe('hover overlay', () => {
 
     button.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
 
-    const box = overlayHost()?.shadowRoot?.querySelector<HTMLElement>('.box');
-    expect(box === undefined || box === null || box.hidden).toBe(true);
+    const box = highlightBox();
+    expect(box === null || box.hidden).toBe(true);
   });
 
   it('ignores hover over [data-id="rci-ignore"] elements', () => {
@@ -326,7 +512,7 @@ describe('hover overlay', () => {
     expect(overlayHost()).toBeUndefined();
   });
 
-  it('removes the overlay after a successful click', () => {
+  it('removes the highlight after a successful click and keeps only the toast', async () => {
     const button = renderApp(sourcedFiber());
     start();
     send({ source: 'rci', type: 'set-mode', mode: 'copy' });
@@ -336,5 +522,7 @@ describe('hover overlay', () => {
 
     expect(overlayHost()).toBeUndefined();
     expect(cursorStyle()).toBeUndefined();
+    await vi.waitFor(() => expect(visibleToast()).not.toBeNull());
+    expect(highlightBox()!.hidden).toBe(true);
   });
 });

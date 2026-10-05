@@ -9,9 +9,11 @@ import {
   PageToBridge,
 } from '../shared/messages';
 import { DEFAULT_SETTINGS, IExtensionSettings } from '../shared/settings';
+import { runAction } from './actions';
 import { detectReact, IReactDetection } from './detect';
 import { formatLabel } from './fiberLabel';
 import { createOverlay, IGNORE_ATTRIBUTE_VALUE } from './overlay';
+import { EDITOR_FAILED_TOAST, FAIL_TOAST, SUCCESS_TOAST } from './toastText';
 
 export interface IPageInspectorOptions {
   detectionTimeoutMs?: number;
@@ -53,6 +55,7 @@ export const createPageInspector = (
   let observer: MutationObserver | null = null;
   let detectionTimer: ReturnType<typeof setTimeout> | null = null;
   let detectionDeadline: ReturnType<typeof setTimeout> | null = null;
+  let destroyed = false;
 
   const getStatus = (): IPageStatus => ({ ...detection, mode });
 
@@ -133,19 +136,36 @@ export const createPageInspector = (
 
     if (!result.ok) {
       if (result.reason === 'no-source') console.warn(NO_SOURCE_WARNING);
+      const toastText = FAIL_TOAST[result.reason];
+      if (toastText) overlay.toast(toastText, 'info');
       post({ source: MESSAGE_SOURCE, type: 'result', ok: false, mode: activeMode, reason: result.reason });
       return;
     }
 
-    post({
-      source: MESSAGE_SOURCE,
-      type: 'result',
-      ok: true,
-      mode: activeMode,
-      filePath: result.filePath,
-      line: result.line,
-    });
+    const { filePath, line } = result;
+    const action = runAction(win, activeMode, { filePath, line }, settings);
     setMode(null);
+
+    void action
+      .catch(() => false)
+      .then(ok => {
+        if (destroyed) return;
+
+        if (!ok) {
+          overlay.toast(EDITOR_FAILED_TOAST[activeMode], 'error');
+          post({
+            source: MESSAGE_SOURCE,
+            type: 'result',
+            ok: false,
+            mode: activeMode,
+            reason: 'editor-request-failed',
+          });
+          return;
+        }
+
+        overlay.toast(SUCCESS_TOAST[activeMode], 'success');
+        post({ source: MESSAGE_SOURCE, type: 'result', ok: true, mode: activeMode, filePath, line });
+      });
   };
 
   const handleClick = (event: MouseEvent) => {
@@ -228,12 +248,14 @@ export const createPageInspector = (
   postStatus();
 
   const destroy = () => {
+    destroyed = true;
     win.removeEventListener('message', handleMessage);
     stopDetection();
     if (mode !== null) {
       mode = null;
       deactivate();
     }
+    overlay.dispose();
   };
 
   return {

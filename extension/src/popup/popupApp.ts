@@ -26,6 +26,7 @@ export const TEXT = {
   openInEditorPath: 'Open-in-editor yolu (WebStorm)',
   highlight: 'Elementi vurğula',
   saved: 'Yadda saxlanıldı',
+  webstormNote: 'Requires Vite/Rsbuild dev server',
 };
 
 const MODE_LABELS: Record<ActiveMode, string> = {
@@ -64,6 +65,7 @@ const TEMPLATE = `
   <p class="status" data-role="status" role="status"></p>
   <button type="button" class="enable" data-role="enable" hidden></button>
   <div class="modes" data-role="modes"></div>
+  <p class="note" data-role="webstorm-note" hidden></p>
   <form class="settings" data-role="settings">
     <h2></h2>
     <label class="field">
@@ -99,6 +101,7 @@ export const initPopup = async (root: HTMLElement): Promise<void> => {
   const statusEl = query<HTMLParagraphElement>(root, '[data-role="status"]');
   const enableButton = query<HTMLButtonElement>(root, '[data-role="enable"]');
   const modesEl = query<HTMLDivElement>(root, '[data-role="modes"]');
+  const webstormNoteEl = query<HTMLParagraphElement>(root, '[data-role="webstorm-note"]');
   const form = query<HTMLFormElement>(root, '[data-role="settings"]');
   const ignoredInput = query<HTMLInputElement>(form, 'input[name="ignoredPaths"]');
   const editorPathInput = query<HTMLInputElement>(form, 'input[name="openInEditorPath"]');
@@ -111,6 +114,7 @@ export const initPopup = async (root: HTMLElement): Promise<void> => {
   query<HTMLSpanElement>(form, '[data-role="highlight-label"]').textContent = TEXT.highlight;
   enableButton.textContent = TEXT.enableOnSite;
   savedEl.textContent = TEXT.saved;
+  webstormNoteEl.textContent = TEXT.webstormNote;
 
   let state: PopupState = { kind: 'loading' };
 
@@ -120,6 +124,7 @@ export const initPopup = async (root: HTMLElement): Promise<void> => {
     button.className = 'mode';
     button.dataset.mode = mode;
     button.textContent = MODE_LABELS[mode];
+    if (mode === 'webstorm') button.title = TEXT.webstormNote;
     modesEl.append(button);
     return button;
   });
@@ -135,6 +140,7 @@ export const initPopup = async (root: HTMLElement): Promise<void> => {
     });
 
     enableButton.hidden = state.kind !== 'inactive' || !canEnableOnSite(url);
+    webstormNoteEl.hidden = status?.mode !== 'webstorm';
   };
 
   const fillSettings = (settings: IExtensionSettings) => {

@@ -129,3 +129,13 @@ h2 {
 .saved[hidden] {
   display: none;
 }
+
+.note {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.note[hidden] {
+  display: none;
+}

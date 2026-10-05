@@ -115,6 +115,25 @@ describe('popup modes', () => {
     expect(modeButton('webstorm')?.disabled).toBe(false);
   });
 
+  it('shows the WebStorm dev server note only while WebStorm mode is active', async () => {
+    const note = () => root.querySelector<HTMLParagraphElement>('[data-role="webstorm-note"]');
+    respondWith({ ...devStatus, mode: 'webstorm' });
+    await initPopup(root);
+
+    expect(TEXT.webstormNote).toBe('Requires Vite/Rsbuild dev server');
+    expect(note()?.textContent).toBe(TEXT.webstormNote);
+    expect(note()?.hidden).toBe(false);
+    expect(modeButton('webstorm')?.title).toBe(TEXT.webstormNote);
+
+    root.remove();
+    root = document.createElement('main');
+    document.body.append(root);
+    respondWith({ ...devStatus, mode: 'vscode' });
+    await initPopup(root);
+
+    expect(note()?.hidden).toBe(true);
+  });
+
   it('disables mode buttons without source info', async () => {
     respondWith({ hasReact: true, hasSourceInfo: false, mode: null });
     await initPopup(root);
