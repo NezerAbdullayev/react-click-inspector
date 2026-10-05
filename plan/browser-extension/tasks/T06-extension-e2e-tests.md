@@ -22,6 +22,7 @@ Extension-ı real Chromium-da yükləyib əsas ssenariləri avtomatik yoxlamaq v
 - `package.json`, `package-lock.json` (`@playwright/test`, `ext:e2e` skripti)
 - `.github/workflows/ci.yml`
 - `.gitignore` (Playwright artefaktları)
+- `vitest.config.mts`, `extension/vitest.config.mts` (yalnız e2e istisnası pozulubsa)
 
 ## Addımlar
 1. **`extension/e2e/fixture/`:** minimal Vite + React 18 tətbiqi. Tərkibi: düymə və counter, link, ayrıca faylda `LibraryButton` (`ignoredPaths` testi üçün). Vite config-də test üçün `/__open-in-editor` sorğularını qeydə alan kiçik middleware olur (redaktor real açılmır, sorğu yaddaşda saxlanır və `/__rci-test/last-open` ilə oxunur).
@@ -37,6 +38,7 @@ Extension-ı real Chromium-da yükləyib əsas ssenariləri avtomatik yoxlamaq v
 
 ## Qəbul meyarları
 - [ ] `npm run ext:e2e` lokal olaraq keçir
+- [ ] `npm test` və `npm run ext:test` `extension/e2e/**/*.spec.ts` fayllarını götürmür (T02-dəki `include`/`exclude` sayəsində; yoxla, pozulubsa vitest config-lərini düzəlt)
 - [ ] CI workflow sintaksisi düzgündür (`act` olmadan da: YAML yoxlanılır, job-lar mövcud skriptləri çağırır)
 - [ ] Flaky test yoxdur: ardıcıl 3 dəfə işlədildikdə keçir
 

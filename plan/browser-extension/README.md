@@ -29,18 +29,19 @@ Bu sınaqlar istifadəçinin maşınında (Windows 11, WebStorm 2026.2.1) aparı
 | ID | Tapşırıq | Branch | Asılıdır | Həcm |
 |---|---|---|---|---|
 | [T01](tasks/T01-extract-inspector-core.md) | Ortaq məntiqi `src/core`-a çıxarmaq | `refactor/extract-inspector-core` | – | M |
-| [T02](tasks/T02-extension-scaffold.md) | Extension skeleti, manifest, build | `feature/extension-scaffold` | – | M |
+| [T02](tasks/T02-extension-scaffold.md) | Extension skeleti, manifest, build, ortaq fayllar (mesajlar, ayarlar, mock, test və typecheck) | `feature/extension-scaffold` | – | M–L |
 | [T03](tasks/T03-extension-page-inspector.md) | Səhifədə işləyən inspektor (MAIN world) | `feature/extension-page-inspector` | T01, T02 | L |
 | [T04](tasks/T04-extension-popup-and-settings.md) | Popup, ayarlar, mesajlaşma, qısayollar | `feature/extension-popup-and-settings` | T02 | M |
 | [T05](tasks/T05-extension-editor-integrations.md) | Kopyalama, VS Code, WebStorm inteqrasiyası | `feature/extension-editor-integrations` | T03, T04 | M |
 | [T06](tasks/T06-extension-e2e-tests.md) | Playwright e2e testləri və CI | `feature/extension-e2e-tests` | T05 | M |
 | [T07](tasks/T07-extension-native-host.md) | *(istəyə görə)* Native messaging host | `feature/extension-native-host` | T06 | L |
 | [T08](tasks/T08-extension-release.md) | *(Sahibin qərarı)* Paketləmə və store | `chore/extension-release` | T06 | S |
+| [T09](tasks/T09-npm-webstorm-open-in-editor.md) | npm paketində WebStorm-u `/__open-in-editor` ilə açmaq | `feature/npm-webstorm-open-in-editor` | T01 | S–M |
 
 ## Asılılıq qrafiki
 
 ```
-T01 ──┐
+T01 ──┬────────────────────────────────────► T09 (npm paketi)
       ├──► T03 ──┐
 T02 ──┤          ├──► T05 ──► T06 ──┬──► T07 (istəyə görə)
       └──► T04 ──┘                  └──► T08 (Sahibin qərarı)
@@ -48,10 +49,21 @@ T02 ──┤          ├──► T05 ──► T06 ──┬──► T07 (is
 
 **Paralel dalğalar:**
 1. T01 ∥ T02
-2. T03 ∥ T04
+2. T03 ∥ T04 ∥ T09
 3. T05
 4. T06
 5. T07 ∥ T08
+
+T03 və T04 paylaşılan faylları (`extension/src/shared/**`, `extension/test/chromeMock.ts`, `package.json`, vitest config-ləri) yalnız oxuyur. Bu fayllar T02-də tam hazırlanır (ARCHITECTURE D13).
+
+## Başlamazdan əvvəl
+
+Hər agent ən son `master`-dən başlayır:
+
+```bash
+git checkout master
+git pull
+```
 
 ## Hazır sayılma meyarı (MVP = T01–T06)
 

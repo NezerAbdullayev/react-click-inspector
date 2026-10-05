@@ -32,11 +32,11 @@ Fiber-dən mənbə faylını tapan və redaktor linklərini quran məntiqi React
      | { ok: false; reason: 'no-source' | 'all-ignored' };
    export const resolveSource = (fiber: IFiber, ignoredPaths?: string | string[]): ResolveResult
    ```
-   Mövcud döngünü (`_debugSource`, `ignoredPaths`, `printed` set) buraya köçür.
+   Mövcud döngünü (`_debugSource`, `ignoredPaths`) buraya köçür. `printed` Set-i köçürmə, sil: hər `printed.add`-dan sonra `return` gəldiyi üçün `printed.has` heç vaxt `true` olmur, yəni bu ölü koddur. `no-source`: zəncirdə heç bir `_debugSource.fileName` yoxdur. `all-ignored`: mənbə var, amma hamısı `ignoredPaths`-ə düşür.
 3. `src/core/editorLinks.ts`: `getVSCodeLink` (mövcud) və yeni `getOpenInEditorUrl(origin, endpointPath, filePath, line)`. Nəticə: `${origin}${endpointPath}?file=${encodeURIComponent(`${filePath}:${line}:1`)}`.
 4. `src/core/index.ts`: hamısını export edir. Core heç bir halda `react` import etməməlidir.
 5. `useClickInspector.tsx` `resolveSource` istifadə etsin. Davranış eyni qalmalıdır: `no-source` halında konsol xəbərdarlığı, `all-ignored` halında heç nə edilmir və rejim aktiv qalır.
-6. `src/__tests__/core/*.test.ts`: `resolveSource` üçün əl ilə qurulmuş fiber zənciri ilə testlər (mənbə yoxdur, ignored, dublikat açar, uğurlu hal) və `getOpenInEditorUrl` testi.
+6. `src/__tests__/core/*.test.ts`: `resolveSource` üçün əl ilə qurulmuş fiber zənciri ilə testlər (`no-source`, `all-ignored`, ignored olandan sonra valideynə keçid, string və massiv `ignoredPaths`, uğurlu hal) və `getOpenInEditorUrl` testi.
 
 ## Qəbul meyarları
 - [ ] `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` keçir
