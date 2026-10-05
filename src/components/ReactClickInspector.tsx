@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Popup } from './Popup';
+import { SettingsModal } from './SettingsModal';
 import { useIsLocalhost } from '../hooks';
 import { DevInspectorProvider } from '../context';
 import { IReactClickInspector } from '../models';
@@ -28,8 +29,9 @@ export const ReactClickInspector: FC<IReactClickInspector> = ({
   return (
     <>
       {permissions ? (
-        <DevInspectorProvider {...{ icon, modalCss, toggleBtnCss, ignoredPaths, showPopup }}>
+        <DevInspectorProvider {...{ ignoredPaths, showPopup }}>
           {children}
+          <SettingsModal {...{ icon, toggleBtnCss, modalCss }} />
           <Popup message="success" visible={popupVisible} />
         </DevInspectorProvider>
       ) : (

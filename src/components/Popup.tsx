@@ -1,5 +1,4 @@
 import React from 'react';
-import { useWindowsWith } from '../hooks';
 
 interface PopupProps {
   message: string;
@@ -8,7 +7,6 @@ interface PopupProps {
 
 export const Popup: React.FC<PopupProps> = ({ message, visible }) => {
   if (!visible) return null;
-  const isSmallScreen = useWindowsWith()
 
   return (
     <div
@@ -17,7 +15,7 @@ export const Popup: React.FC<PopupProps> = ({ message, visible }) => {
         bottom: "12%",
         right: '40px',
         padding: '5px 10px',
-        backgroundColor: 'rgba(365, 365, 365, 1)',
+        backgroundColor: '#fff',
         color: 'black',
         borderRadius: '8px',
         boxShadow: '0 2px 10px rgba(0,0,0,0.3)',

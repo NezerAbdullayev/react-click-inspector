@@ -1,9 +1,4 @@
 export const getFiberFromDom = (dom: HTMLElement) => {
-  // eslint-disable-next-line no-restricted-syntax
-  for (const key in dom) {
-    if (key.startsWith('__reactFiber$')) {
-      return (dom as any)[key];
-    }
-  }
-  return null;
+  const fiberKey = Object.keys(dom).find(key => key.startsWith('__reactFiber$'));
+  return fiberKey ? (dom as any)[fiberKey] : null;
 };
