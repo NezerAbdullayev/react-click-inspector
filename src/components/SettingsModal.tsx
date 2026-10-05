@@ -3,20 +3,22 @@ import { useDevInspector, useIsSmallScreen } from '../hooks';
 import { ISettingsModalProps } from '../models';
 
 export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleBtnCss }) => {
-  const { logOnly, setIDEType, setLogOnly, setOpenInVSCode, openInVSCode } = useDevInspector();
+  const { mode, setMode, setIDEType } = useDevInspector();
   const [isActive, setIsActive] = useState(false);
   const isSmallScreen = useIsSmallScreen()
   const modalWidth = isSmallScreen ? 220 : 300;
+  const logOnly = mode === 'copy';
+  const openInVSCode = mode === 'vscode';
 
   const onLogOnlyToggle = () => {
-    setLogOnly(prev => !prev);
-    if (!logOnly) setIsActive(prev => !prev);
+    setMode(logOnly ? null : 'copy');
+    if (!logOnly) setIsActive(false);
   };
 
   const onOpenInVSCode = () => {
     setIDEType('vsCode');
-    setOpenInVSCode(prev => !prev);
-    if (!openInVSCode) setIsActive(prev => !prev);
+    setMode(openInVSCode ? null : 'vscode');
+    if (!openInVSCode) setIsActive(false);
   };
 
   //  style

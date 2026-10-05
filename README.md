@@ -56,11 +56,14 @@ import ReactClickInspector from "react-click-inspector";
    - **VSCode**: the next click opens the component's file at the right line in VS Code.
 3. Click any element in your app. The mode turns off automatically after one click.
 
+Only one mode is active at a time. While a mode is active, the click is used by the inspector only: links, forms and your app's click handlers don't fire. Press **Escape** to cancel the active mode.
+
 ## ⚙️ Props
 
 | Prop           | Type                  | Default     | Description                                                                                    |
 | -------------- | --------------------- | ----------- | ---------------------------------------------------------------------------------------------- |
 | `children`     | `ReactNode`           | (required)  | Your application.                                                                              |
+| `enabled`      | `boolean`             | localhost   | Turns the inspector on or off. By default it is enabled only on `localhost`, `127.0.0.1` or `::1`. |
 | `ignoredPaths` | `string \| string[]`  | `undefined` | File paths containing any of these strings are skipped, and the next parent component is used. |
 | `icon`         | `ReactNode`           | arrow icon  | Custom content for the toggle button.                                                          |
 | `toggleBtnCss` | `CSSProperties`       | `undefined` | Style overrides for the toggle button.                                                         |
@@ -70,12 +73,22 @@ import ReactClickInspector from "react-click-inspector";
 
 - **React 18** (`react` and `react-dom` `^18.0.0`).
 - A **development build**. The inspector reads source locations from React's `_debugSource`, which is only present in development mode when JSX source info is enabled (Vite with `@vitejs/plugin-react`, Create React App and Next.js do this by default in dev).
-- The app must run on **`localhost`**, `127.0.0.1` or `::1`. On any other host the inspector renders only `children`.
+- By default the app must run on **`localhost`**, `127.0.0.1` or `::1`; on any other host the inspector renders only `children`. Use the `enabled` prop to change this, e.g. `enabled={process.env.NODE_ENV === "development"}` for a LAN IP or custom dev domain.
 - To open files from the browser, VS Code must be installed and registered as the handler for `vscode://` links (the default after installation).
 
-> ⚠️ React 19 removed `_debugSource`, so it is not supported yet.
+> ⚠️ React 19 removed `_debugSource`, so it is not supported yet. When no source information is found, the inspector logs a warning in the console.
 >
 > ⚠️ Support for **WebStorm** and other IDEs is planned for upcoming versions.
+
+## 🛠 Development
+
+```bash
+npm install
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
 ## 📄 License
 

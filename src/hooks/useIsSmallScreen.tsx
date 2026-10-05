@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 
-export const useIsSmallScreen = (): boolean => {
-  const [isSmallScreen, setIsSmallScreen] = useState<boolean>(false);
+const getIsSmallScreen = () => typeof window !== 'undefined' && window.innerWidth < 1500;
 
-  const updateWidth = () => {
-    setIsSmallScreen(window.innerWidth < 1500);
-  };
+export const useIsSmallScreen = (): boolean => {
+  const [isSmallScreen, setIsSmallScreen] = useState<boolean>(getIsSmallScreen);
 
   useEffect(() => {
-    updateWidth();
+    const updateWidth = () => {
+      setIsSmallScreen(getIsSmallScreen());
+    };
 
     window.addEventListener('resize', updateWidth);
     return () => window.removeEventListener('resize', updateWidth);

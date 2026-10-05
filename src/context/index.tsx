@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState, FC } from 'react';
 import { useClickInspector } from '../hooks/useClickInspector';
 import { IdeType } from '../utils';
-import { DevInspectorContextType, IDevInspectorProvider } from '../models';
+import { DevInspectorContextType, IDevInspectorProvider, InspectorMode } from '../models';
 
 export const DevInspectorContext = createContext<DevInspectorContextType | undefined>(undefined);
 
@@ -10,40 +10,42 @@ export const DevInspectorProvider: FC<IDevInspectorProvider> = ({
   ignoredPaths,
   showPopup,
 }) => {
-  const [logOnly, setLogOnly] = useState<boolean>(false);
-  const [openInVSCode, setOpenInVSCode] = useState<boolean>(false);
+  const [mode, setMode] = useState<InspectorMode>(null);
   const [IDEType, setIDEType] = useState<IdeType>(undefined);
 
   useClickInspector({
-    setOpenInVSCode,
-    setLogOnly,
-    openInVSCode,
+    mode,
+    setMode,
     ignoredPaths,
     showPopup,
-    logOnly,
     IDEType,
   });
 
-  const isInspecting = logOnly || openInVSCode;
+  const isInspecting = mode !== null;
   useEffect(() => {
     if (!isInspecting) return;
 
     const previousCursor = document.body.style.cursor;
     document.body.style.cursor = 'crosshair';
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMode(null);
+    };
+    document.addEventListener('keydown', onKeyDown);
+
     return () => {
       document.body.style.cursor = previousCursor;
+      document.removeEventListener('keydown', onKeyDown);
     };
   }, [isInspecting]);
 
   return (
     <DevInspectorContext.Provider
       value={{
-        logOnly,
+        mode,
         IDEType,
-        setLogOnly,
+        setMode,
         setIDEType,
-        openInVSCode,
-        setOpenInVSCode,
       }}
     >
       {children}
