@@ -1,17 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { getFiberFromDom, getVSCodeLink, IdeType } from '../utils';
 
-export interface IUseGetPatchClickedElement {
+export interface IUseClickInspector {
   setOpenInVSCode: (value: boolean) => void;
   ignoredPaths?: string | string[];
   openInVSCode: boolean;
   setLogOnly: (value: boolean) => void;
-  setIDEType?: (value: string) => void;
   showPopup: () => void;
   logOnly?: boolean;
   IDEType?: IdeType | undefined;
 }
-export const useGetPatchClickedElement = ({
+export const useClickInspector = ({
   setOpenInVSCode,
   setLogOnly,
   openInVSCode,
@@ -19,7 +18,7 @@ export const useGetPatchClickedElement = ({
   showPopup,
   logOnly,
   IDEType,
-}: IUseGetPatchClickedElement): void => {
+}: IUseClickInspector): void => {
 
   const latest = useRef({ ignoredPaths, showPopup, IDEType, setLogOnly, setOpenInVSCode });
   latest.current = { ignoredPaths, showPopup, IDEType, setLogOnly, setOpenInVSCode };
@@ -33,7 +32,7 @@ export const useGetPatchClickedElement = ({
       let currentElement: HTMLElement | null = target;
 
       while (currentElement) {
-        if (currentElement.dataset.id === 'continue-element_debbug') return;
+        if (currentElement.dataset.id === 'rci-ignore') return;
 
         currentElement = currentElement.parentElement as HTMLElement | null;
       }

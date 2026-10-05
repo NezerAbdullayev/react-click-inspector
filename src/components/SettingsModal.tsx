@@ -1,14 +1,12 @@
 import React, { FC, useState, CSSProperties } from 'react';
-import { useDevInspector, useWindowsWith } from '../hooks';
+import { useDevInspector, useIsSmallScreen } from '../hooks';
 import { ISettingsModalProps } from '../models';
 
 export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleBtnCss }) => {
-  const { IDEType, logOnly, setIDEType, setLogOnly, setOpenInVSCode, openInVSCode } =
-    useDevInspector();
+  const { logOnly, setIDEType, setLogOnly, setOpenInVSCode, openInVSCode } = useDevInspector();
   const [isActive, setIsActive] = useState(false);
-  const isSmallScreen = useWindowsWith()
+  const isSmallScreen = useIsSmallScreen()
   const modalWidth = isSmallScreen ? 220 : 300;
-  const isVSCode = IDEType !== 'webstorm';
 
   const onLogOnlyToggle = () => {
     setLogOnly(prev => !prev);
@@ -55,7 +53,7 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
   };
 
   return (
-    <div style={{ position: 'relative' }} data-id="continue-element_debbug">
+    <div style={{ position: 'relative' }} data-id="rci-ignore">
       <button style={toggleButtonStyle} onClick={() => setIsActive(!isActive)} type="button">
         {icon || (
           <svg
@@ -77,6 +75,7 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
 
         <button
           type="button"
+          aria-pressed={logOnly}
           onClick={onLogOnlyToggle}
           style={{
             padding: isSmallScreen ? "4px 8px" : '8px 16px',
@@ -95,14 +94,17 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
         </button>
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <label
-            htmlFor="vsCode"
+          <button
+            type="button"
+            aria-pressed={openInVSCode}
+            onClick={onOpenInVSCode}
             style={{
               flex: 1,
               padding: isSmallScreen ? "5px 7px" : '10px 14px',
               borderRadius: 6,
               border: `2px solid ${openInVSCode ? '#007acc' : '#ccc'}`,
               backgroundColor: openInVSCode ? '#e3f2fd' : '#ffffff',
+              color: '#333',
               textAlign: 'center',
               cursor: 'pointer',
               fontWeight: openInVSCode ? 600 : 400,
@@ -111,17 +113,8 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
               fontSize: isSmallScreen ? 12 : 16,
             }}
           >
-            <input
-              type="button"
-              name="ide"
-              id="vsCode"
-              value="vsCode"
-              checked={isVSCode}
-              onClick={onOpenInVSCode}
-              style={{ display: 'none' }}
-            />
             VSCode
-          </label>
+          </button>
 
           {/* // TODO: This WebStorm button is currently inactive and should be implemented later. */}
           {/* <label

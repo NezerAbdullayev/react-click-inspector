@@ -13,7 +13,9 @@ export interface IReactClickInspector extends ISettingsModalProps {
   ignoredPaths?: string | string[];
 }
 
-export interface IDevInspectorProvider extends IReactClickInspector {
+export interface IDevInspectorProvider {
+  children: ReactNode;
+  ignoredPaths?: string | string[];
   showPopup: () => void;
 }
 
@@ -21,13 +23,9 @@ export interface IDevInspectorProvider extends IReactClickInspector {
 
 export interface DevInspectorContextType {
   logOnly: boolean;
-  visbTool: boolean;
   openInVSCode: boolean;
-  openInWebStorm: boolean;
   IDEType: IdeType | undefined;
   setLogOnly: Dispatch<SetStateAction<boolean>>;
-  setVisbTool: Dispatch<SetStateAction<boolean>>;
   setOpenInVSCode: Dispatch<SetStateAction<boolean>>;
-  setOpenInWebStorm: Dispatch<SetStateAction<boolean>>;
   setIDEType: Dispatch<SetStateAction<IdeType | undefined>>;
 };
