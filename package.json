@@ -16,10 +16,13 @@
   ],
   "scripts": {
     "build": "tsup src/index.tsx --format cjs,esm --dts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p extension",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "ext:build": "tsup --config extension/tsup.config.ts",
+    "ext:watch": "tsup --config extension/tsup.config.ts --watch extension/src --watch extension/manifest.json --watch extension/public --watch src/core",
+    "ext:test": "vitest run -c extension/vitest.config.mts",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
@@ -50,6 +53,7 @@
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
+    "@types/chrome": "^0.3.4",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
