@@ -1,15 +1,15 @@
-import { CSSProperties, Dispatch, SetStateAction } from "react";
+import { CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
 import { IdeType } from "../utils";
 
 
 export interface ISettingsModalProps {
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   toggleBtnCss?: CSSProperties;
   modalCss?: CSSProperties;
 }
 
 export interface IReactClickInspector extends ISettingsModalProps {
-  children: React.ReactNode;
+  children: ReactNode;
   ignoredPaths?: string | string[];
 }
 
