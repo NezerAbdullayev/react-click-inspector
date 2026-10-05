@@ -3,12 +3,13 @@ import { useDevInspector, useIsSmallScreen } from '../hooks';
 import { ISettingsModalProps } from '../models';
 
 export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleBtnCss }) => {
-  const { mode, setMode, setIDEType } = useDevInspector();
+  const { mode, setMode } = useDevInspector();
   const [isActive, setIsActive] = useState(false);
   const isSmallScreen = useIsSmallScreen()
   const modalWidth = isSmallScreen ? 220 : 300;
   const logOnly = mode === 'copy';
   const openInVSCode = mode === 'vscode';
+  const openInWebStorm = mode === 'webstorm';
 
   const onLogOnlyToggle = () => {
     setMode(logOnly ? null : 'copy');
@@ -16,9 +17,13 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
   };
 
   const onOpenInVSCode = () => {
-    setIDEType('vsCode');
     setMode(openInVSCode ? null : 'vscode');
     if (!openInVSCode) setIsActive(false);
+  };
+
+  const onOpenInWebStorm = () => {
+    setMode(openInWebStorm ? null : 'webstorm');
+    if (!openInWebStorm) setIsActive(false);
   };
 
   //  style
@@ -118,35 +123,27 @@ export const SettingsModal: FC<ISettingsModalProps> = ({ icon, modalCss, toggleB
             VSCode
           </button>
 
-          {/* // TODO: This WebStorm button is currently inactive and should be implemented later. */}
-          {/* <label
-            htmlFor="webstorm"
+          <button
+            type="button"
+            aria-pressed={openInWebStorm}
+            onClick={onOpenInWebStorm}
             style={{
               flex: 1,
-              padding: '10px 14px',
+              padding: isSmallScreen ? "5px 7px" : '10px 14px',
               borderRadius: 6,
-              border: `2px solid ${isWebStorm ? '#008cff' : '#ccc'}`,
-              backgroundColor: isWebStorm ? '#e1f5fe' : '#ffffff',
+              border: `2px solid ${openInWebStorm ? '#008cff' : '#ccc'}`,
+              backgroundColor: openInWebStorm ? '#e1f5fe' : '#ffffff',
+              color: '#333',
               textAlign: 'center',
               cursor: 'pointer',
-              fontWeight: isWebStorm ? 600 : 400,
+              fontWeight: openInWebStorm ? 600 : 400,
               transition: 'all 0.2s ease',
               userSelect: 'none',
+              fontSize: isSmallScreen ? 12 : 16,
             }}
           >
-            <input
-              id="webstorm"
-              type="radio"
-              name="ide"
-              value="webstorm"
-              checked={isWebStorm}
-              onChange={() => {
-                setOpenInWebStorm(prev => !prev);
-              }}
-              style={{ display: 'none' }}
-            />
             WebStorm
-          </label> */}
+          </button>
         </div>
       </div>
     </div>

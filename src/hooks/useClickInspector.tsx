@@ -1,27 +1,29 @@
 import { useEffect, useRef } from 'react';
-import { getFiberFromDom, getVSCodeLink, IdeType } from '../utils';
-import { resolveSource } from '../core';
+import { getFiberFromDom, getVSCodeLink } from '../utils';
+import { getOpenInEditorUrl, resolveSource } from '../core';
 import { InspectorMode } from '../models';
+
+const OPEN_IN_EDITOR_ERROR = 'Dev server does not support /__open-in-editor';
 
 export interface IUseClickInspector {
   mode: InspectorMode;
   setMode: (value: InspectorMode) => void;
   ignoredPaths?: string | string[];
-  showPopup: () => void;
-  IDEType?: IdeType | undefined;
+  showPopup: (message?: string) => void;
+  openInEditorPath?: string;
 }
 export const useClickInspector = ({
   mode,
   setMode,
   ignoredPaths,
   showPopup,
-  IDEType,
+  openInEditorPath = '/__open-in-editor',
 }: IUseClickInspector): void => {
 
-  const latest = useRef({ ignoredPaths, showPopup, IDEType, setMode });
+  const latest = useRef({ ignoredPaths, showPopup, openInEditorPath, setMode });
 
   useEffect(() => {
-    latest.current = { ignoredPaths, showPopup, IDEType, setMode };
+    latest.current = { ignoredPaths, showPopup, openInEditorPath, setMode };
   });
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export const useClickInspector = ({
       e.preventDefault();
       e.stopPropagation();
 
-      const { ignoredPaths, showPopup, IDEType, setMode } = latest.current;
+      const { ignoredPaths, showPopup, openInEditorPath, setMode } = latest.current;
 
       const fiber = getFiberFromDom(target);
       if (!fiber) {
@@ -69,10 +71,18 @@ export const useClickInspector = ({
       }
 
       if (mode === 'vscode') {
-        const vscodeUrl = getVSCodeLink(filePath, line, IDEType);
+        const vscodeUrl = getVSCodeLink(filePath, line);
         const a = document.createElement('a');
         a.href = vscodeUrl;
         a.click();
+      }
+
+      if (mode === 'webstorm') {
+        fetch(getOpenInEditorUrl(window.location.origin, openInEditorPath, filePath, line))
+          .then(response => {
+            if (!response.ok) showPopup(OPEN_IN_EDITOR_ERROR);
+          })
+          .catch(() => showPopup(OPEN_IN_EDITOR_ERROR));
       }
 
       setMode(null);

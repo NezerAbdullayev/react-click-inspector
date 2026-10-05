@@ -12,13 +12,16 @@ export const ReactClickInspector: FC<IReactClickInspector> = ({
   toggleBtnCss,
   ignoredPaths,
   enabled,
+  openInEditorPath,
 }) => {
   const isLocalhost = useIsLocalhost();
   const permissions = enabled ?? isLocalhost;
   const [popupVisible, setPopupVisible] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('success');
   const popupTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const showPopup = useCallback(() => {
+  const showPopup = useCallback((message = 'success') => {
+    setPopupMessage(message);
     setPopupVisible(true);
     clearTimeout(popupTimer.current);
     popupTimer.current = setTimeout(() => {
@@ -31,10 +34,10 @@ export const ReactClickInspector: FC<IReactClickInspector> = ({
   return (
     <>
       {permissions ? (
-        <DevInspectorProvider {...{ ignoredPaths, showPopup }}>
+        <DevInspectorProvider {...{ ignoredPaths, openInEditorPath, showPopup }}>
           {children}
           <SettingsModal {...{ icon, toggleBtnCss, modalCss }} />
-          <Popup message="success" visible={popupVisible} />
+          <Popup message={popupMessage} visible={popupVisible} />
         </DevInspectorProvider>
       ) : (
         children

@@ -1,6 +1,5 @@
 import React, { createContext, useEffect, useState, FC } from 'react';
 import { useClickInspector } from '../hooks/useClickInspector';
-import { IdeType } from '../utils';
 import { DevInspectorContextType, IDevInspectorProvider, InspectorMode } from '../models';
 
 export const DevInspectorContext = createContext<DevInspectorContextType | undefined>(undefined);
@@ -8,17 +7,17 @@ export const DevInspectorContext = createContext<DevInspectorContextType | undef
 export const DevInspectorProvider: FC<IDevInspectorProvider> = ({
   children,
   ignoredPaths,
+  openInEditorPath,
   showPopup,
 }) => {
   const [mode, setMode] = useState<InspectorMode>(null);
-  const [IDEType, setIDEType] = useState<IdeType>(undefined);
 
   useClickInspector({
     mode,
     setMode,
     ignoredPaths,
     showPopup,
-    IDEType,
+    openInEditorPath,
   });
 
   const isInspecting = mode !== null;
@@ -43,9 +42,7 @@ export const DevInspectorProvider: FC<IDevInspectorProvider> = ({
     <DevInspectorContext.Provider
       value={{
         mode,
-        IDEType,
         setMode,
-        setIDEType,
       }}
     >
       {children}

@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **WebStorm** mode: opens the clicked component's file through the dev server's `/__open-in-editor` endpoint (Vite, Rsbuild). Use `LAUNCH_EDITOR=webstorm` to make the dev server pick WebStorm.
+- `openInEditorPath` prop (default `/__open-in-editor`).
+- `InspectorMode` now includes `'webstorm'`.
+- Error popup "Dev server does not support /__open-in-editor" when the WebStorm request fails.
+
+### Changed
+- "Copy file path", "VSCode" and "WebStorm" modes are mutually exclusive.
+
+### Removed
+- The internal `jetbrains://` link path is no longer used; it did not open WebStorm.
+
 ## 1.1.0
 
 ### Added
