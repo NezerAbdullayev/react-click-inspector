@@ -1,4 +1,4 @@
-import React, { createContext, useState, FC, Dispatch, SetStateAction, CSSProperties } from 'react';
+import React, { createContext, useEffect, useState, FC } from 'react';
 import { SettingsModal } from '../components';
 import { useGetPatchClickedElement } from '../hooks';
 import { IdeType } from '../utils';
@@ -30,29 +30,34 @@ export const DevInspectorProvider: FC<IDevInspectorProvider> = ({
     IDEType,
   });
 
-  const cursorStyle: CSSProperties = {
-    cursor: logOnly || openInVSCode ? 'crosshair' : 'default',
-  }
+  const isInspecting = logOnly || openInVSCode;
+  useEffect(() => {
+    if (!isInspecting) return;
+
+    const previousCursor = document.body.style.cursor;
+    document.body.style.cursor = 'crosshair';
+    return () => {
+      document.body.style.cursor = previousCursor;
+    };
+  }, [isInspecting]);
 
   return (
-    <div style={cursorStyle}>
-      <DevInspectorContext.Provider
-        value={{
-          logOnly,
-          IDEType,
-          visbTool,
-          setLogOnly,
-          setIDEType,
-          setVisbTool,
-          openInVSCode,
-          openInWebStorm,
-          setOpenInVSCode,
-          setOpenInWebStorm,
-        }}
-      >
-        {children}
-        <SettingsModal {...{ icon, toggleBtnCss, modalCss }} />
-      </DevInspectorContext.Provider>
-    </div>
+    <DevInspectorContext.Provider
+      value={{
+        logOnly,
+        IDEType,
+        visbTool,
+        setLogOnly,
+        setIDEType,
+        setVisbTool,
+        openInVSCode,
+        openInWebStorm,
+        setOpenInVSCode,
+        setOpenInWebStorm,
+      }}
+    >
+      {children}
+      <SettingsModal {...{ icon, toggleBtnCss, modalCss }} />
+    </DevInspectorContext.Provider>
   );
 };

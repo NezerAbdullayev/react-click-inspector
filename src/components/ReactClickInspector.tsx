@@ -1,4 +1,4 @@
-import React, { CSSProperties, FC, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Popup } from './Popup';
 import { useIsLocalhost } from '../hooks';
 import { DevInspectorProvider } from '../context';
@@ -13,13 +13,17 @@ export const ReactClickInspector: FC<IReactClickInspector> = ({
 }) => {
   const permissions = useIsLocalhost();
   const [popupVisible, setPopupVisible] = useState(false);
+  const popupTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const showPopup = () => {
+  const showPopup = useCallback(() => {
     setPopupVisible(true);
-    setTimeout(() => {
+    clearTimeout(popupTimer.current);
+    popupTimer.current = setTimeout(() => {
       setPopupVisible(false);
     }, 2000);
-  };
+  }, []);
+
+  useEffect(() => () => clearTimeout(popupTimer.current), []);
 
   return (
     <>
