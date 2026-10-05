@@ -14,9 +14,11 @@ Vəziyyətlər: `todo` → `in-progress` → `review` → `done`. Əlavə vəziy
 | T06 | E2E testlər və CI | todo | `feature/extension-e2e-tests` | – | T05 gözləyir |
 | T07 | Native messaging host | todo | `feature/extension-native-host` | – | İstəyə görə, Sahibin təsdiqi lazımdır |
 | T08 | Paketləmə və store | todo | `chore/extension-release` | – | Sahibin qərarı |
+| T09 | npm paketində WebStorm (`/__open-in-editor`) | todo | `feature/npm-webstorm-open-in-editor` | – | T01 gözləyir |
 
 ## Jurnal
 
 | Tarix | Hadisə |
 |---|---|
 | 2026-10-05 | Plan yaradıldı. WebStorm inteqrasiya yolları sınaqdan keçirildi (bax: README "Artıq yoxlanılmış faktlar") |
+| 2026-10-05 | Rəydən sonra düzəlişlər: T02 ortaq faylları (mesajlar, ayarlar, `chromeMock`, `ext:test`, extension tsconfig, `@types/chrome`, vitest `include`) tam hazırlayır, T03 və T04 onları yalnız oxuyur. Protokola `all-ignored`, nəticədən sonra rejim cədvəli, `get-status` cache-i və "aktiv deyil" vəziyyəti əlavə olundu. D12 (dinamik qeydiyyatda `world: 'MAIN'` + `executeScript`), aşkarlama qaydası, T07 təhlükəsizlik tələbləri, T01-də ölü `printed` kodunun silinməsi. Yeni T09 |

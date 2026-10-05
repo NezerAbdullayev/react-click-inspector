@@ -21,7 +21,7 @@ Klik nəticəsi seçilmiş rejimə görə icra olunur: yol kopyalanır, VS Code 
 ## Toxunula bilən fayllar
 - `extension/src/page-inspector.ts`
 - `extension/src/page/**`
-- `extension/src/shared/**`
+- `extension/src/shared/**` (yalnız lazım olsa; dəyişikliyi hesabatda göstər)
 - `extension/src/popup/**` (yalnız xəta və status mətnləri)
 - `extension/test/**`
 
@@ -30,7 +30,7 @@ Klik nəticəsi seçilmiş rejimə görə icra olunur: yol kopyalanır, VS Code 
    - `copy`: `navigator.clipboard.writeText(filePath)`. Alınmasa, `document.execCommand('copy')` ilə fallback (gizli textarea). Hər iki yol alınmasa, `editor-request-failed` olur;
    - `vscode`: `getVSCodeLink` + müvəqqəti `<a>` elementi ilə `click()`;
    - `webstorm`: `fetch(getOpenInEditorUrl(location.origin, settings.openInEditorPath, filePath, line))`. `res.ok` deyilsə və ya şəbəkə xətası olarsa, `editor-request-failed` olur.
-2. **Toast:** overlay-in Shadow DOM-unda 2 saniyəlik mesaj: "Copied", "Opening in VS Code", "Opening in WebStorm" və ya xəta mətni. WebStorm xətası üçün mətn: "Dev server does not support /__open-in-editor (Vite and Rsbuild do). Set LAUNCH_EDITOR=webstorm if VS Code opens instead."
+2. **Toast:** overlay-in Shadow DOM-unda 2 saniyəlik mesaj: "Copied", "Opening in VS Code", "Opening in WebStorm" və ya xəta mətni. Mətnlər və rejimin sonrakı vəziyyəti ARCHITECTURE-dəki "Nəticədən sonra rejim" cədvəlinə uyğundur (`no-source` və `all-ignored` üçün də toast). WebStorm xətası üçün mətn: "Dev server does not support /__open-in-editor (Vite and Rsbuild do). Set LAUNCH_EDITOR=webstorm if VS Code opens instead."
 3. Popup-da WebStorm seçiləndə qısa qeyd göstərilir: "Requires Vite/Rsbuild dev server".
 4. **Unit testlər:** hər üç action üçün (`fetch`, `clipboard` və anchor `click` mock-lanır), xəta yolları daxil.
 

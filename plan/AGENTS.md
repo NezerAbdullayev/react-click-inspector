@@ -13,13 +13,14 @@ Hər tapşırığa başlamazdan əvvəl bu faylı oxu. Tapşırıq faylı ilə b
   npm test
   npm run build
   ```
-- Extension üçün əlavə əmrlər T02-də yaradılır: `npm run ext:build`, `npm run ext:test`, `npm run ext:e2e`.
+- Extension üçün əlavə əmrlər: `npm run ext:build`, `npm run ext:test` (T02-də yaradılır), `npm run ext:e2e` (T06-da yaradılır).
+- T02-dən sonra `npm run typecheck` extension kodunu da yoxlayır (`tsc --noEmit -p extension`), `npm test` isə yalnız `src` testlərini işlədir.
 
 ## Branch və commit
 
 - Hər tapşırıq ayrıca branch-dədir. Branch adı tapşırıq faylında verilir.
 - Qayda: kiçik hərflər, prefiks dəyişikliyin növünə görə seçilir: `feature/`, `bugfix/`, `refactor/`, `chore/`. Ad kebab-case yazılır, məsələn `feature/extension-popup-and-settings`.
-- Baza branch tapşırıq faylında göstərilir (default: `master`).
+- Baza branch tapşırıq faylında göstərilir (default: `master`). Başlamazdan əvvəl `git checkout master && git pull` et və branch-i ən son `master`-dən yarat.
 - Commit mesajı conventional commits formatındadır: `feat: ...`, `fix: ...`, `refactor: ...`, `test: ...`, `chore: ...`.
 - Agent öz branch-ində commit edə bilər. **Push etmir, PR açmır, npm və ya Chrome Web Store-a publish etmir.** Bunlar Sahibin qərarıdır.
 
@@ -34,6 +35,7 @@ Hər tapşırığa başlamazdan əvvəl bu faylı oxu. Tapşırıq faylı ilə b
 
 - Yalnız tapşırıqdakı "Toxunula bilən fayllar" siyahısındakı faylları dəyiş.
 - Başqa faylda dəyişiklik lazım olsa, dəyişmə: hesabatda "Əhatədən kənar" bölməsində yaz.
+- Tapşırıqda "Yalnız oxunur" kimi göstərilən faylları dəyişmə. Bu, paralel işləyən tapşırıqların toqquşmaması üçündür.
 - `plan/` qovluğunu dəyişmə. `STATUS.md`-ni yalnız orkestrator yeniləyir.
 - Sistem ayarlarını, registry-ni və qlobal paketləri dəyişmə. İstisna: T07, və orada da yalnız Sahibin təsdiqindən sonra.
 
