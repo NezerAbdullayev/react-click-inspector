@@ -26,7 +26,13 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
+
+const openInEditorUrlPattern = (path: string) =>
+  new RegExp(
+    `^${window.location.origin}${path}\\?file=[^?]*ReactClickInspector\\.test\\.tsx%3A\\d+%3A1$`,
+  );
 
 describe('ReactClickInspector', () => {
   it('renders only children when disabled', () => {
@@ -68,6 +74,7 @@ describe('ReactClickInspector', () => {
 
     expect(onAppClick).not.toHaveBeenCalled();
     expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/ReactClickInspector\.test\.tsx$/));
+    expect(screen.getByText('success')).toBeTruthy();
     expect(modeButton(/copy file path/i).getAttribute('aria-pressed')).toBe('false');
     expect(document.body.style.cursor).toBe('');
   });
@@ -120,11 +127,82 @@ describe('ReactClickInspector', () => {
       </ReactClickInspector>,
     );
 
+    const pressed = () =>
+      [/copy file path/i, /vscode/i, /webstorm/i].map(name => modeButton(name).getAttribute('aria-pressed'));
+
     fireEvent.click(modeButton(/copy file path/i));
     fireEvent.click(modeButton(/vscode/i));
+    expect(pressed()).toEqual(['false', 'true', 'false']);
 
-    expect(modeButton(/copy file path/i).getAttribute('aria-pressed')).toBe('false');
-    expect(modeButton(/vscode/i).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(modeButton(/webstorm/i));
+    expect(pressed()).toEqual(['false', 'false', 'true']);
+
+    fireEvent.click(modeButton(/copy file path/i));
+    expect(pressed()).toEqual(['true', 'false', 'false']);
+
+    fireEvent.click(modeButton(/copy file path/i));
+    expect(pressed()).toEqual(['false', 'false', 'false']);
+  });
+
+  it('opens the file in WebStorm through the dev server', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      <ReactClickInspector enabled>
+        <App />
+      </ReactClickInspector>,
+    );
+
+    fireEvent.click(modeButton(/webstorm/i));
+    expect(modeButton(/webstorm/i).getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(screen.getByText('app button'));
+
+    expect(onAppClick).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toMatch(openInEditorUrlPattern('/__open-in-editor'));
+    expect(modeButton(/webstorm/i).getAttribute('aria-pressed')).toBe('false');
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.queryByText(/does not support/i)).toBeNull();
+  });
+
+  it('uses a custom openInEditorPath', () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      <ReactClickInspector enabled openInEditorPath="/custom-open">
+        <App />
+      </ReactClickInspector>,
+    );
+
+    fireEvent.click(modeButton(/webstorm/i));
+    fireEvent.click(screen.getByText('app button'));
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(openInEditorUrlPattern('/custom-open'));
+  });
+
+  it.each([
+    ['a non-ok response', () => Promise.resolve({ ok: false })],
+    ['a network error', () => Promise.reject(new TypeError('Failed to fetch'))],
+  ])('shows an error popup on %s from the dev server', async (_, respond) => {
+    vi.stubGlobal('fetch', vi.fn(respond));
+
+    render(
+      <ReactClickInspector enabled>
+        <App />
+      </ReactClickInspector>,
+    );
+
+    fireEvent.click(modeButton(/webstorm/i));
+    fireEvent.click(screen.getByText('app button'));
+
+    expect(await screen.findByText('Dev server does not support /__open-in-editor')).toBeTruthy();
+    expect(screen.queryByText('success')).toBeNull();
   });
 
   it('cancels the active mode with Escape', () => {
