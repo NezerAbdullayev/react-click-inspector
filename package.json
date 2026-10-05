@@ -16,13 +16,14 @@
   ],
   "scripts": {
     "build": "tsup src/index.tsx --format cjs,esm --dts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p extension && tsc --noEmit -p extension/tsconfig.node.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p extension && tsc --noEmit -p extension/tsconfig.node.json && tsc --noEmit -p extension/e2e",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "ext:build": "tsup --config extension/tsup.config.ts",
     "ext:watch": "tsup --config extension/tsup.config.ts --watch extension/src --watch extension/manifest.json --watch extension/public --watch src/core",
     "ext:test": "vitest run -c extension/vitest.config.mts",
+    "ext:e2e": "npm run ext:build && playwright test -c extension/e2e/playwright.config.ts",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
@@ -51,6 +52,7 @@
   "description": "A lightweight React tool to inspect clicks and element details for debugging UI events.",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/chrome": "^0.3.4",
