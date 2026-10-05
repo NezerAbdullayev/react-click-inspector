@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { getFiberFromDom, getVSCodeLink, IdeType, IFiber } from '../utils';
+import { getFiberFromDom, getVSCodeLink, IdeType } from '../utils';
+import { resolveSource } from '../core';
 import { InspectorMode } from '../models';
 
 export interface IUseClickInspector {
@@ -48,63 +49,33 @@ export const useClickInspector = ({
         return;
       }
 
-      let current: IFiber | null = fiber;
-      let hasSourceInfo = false;
-      const printed = new Set();
+      const result = resolveSource(fiber, ignoredPaths);
 
-      while (current) {
-        const source = current._debugSource;
-        const filePath = source?.fileName;
-
-        if (!source || !filePath) {
-          current = current.return;
-          continue;
+      if (!result.ok) {
+        if (result.reason === 'no-source') {
+          console.warn(
+            '[React Inspector] No source information found for the clicked element. ' +
+              'It needs a React 18 development build with JSX source info (_debugSource); React 19 is not supported.',
+          );
         }
-
-        hasSourceInfo = true;
-
-        const isSingleIgnoredPath =
-          typeof ignoredPaths === 'string' && filePath.includes(ignoredPaths);
-        const isMultipleIgnoredPaths =
-          Array.isArray(ignoredPaths) &&
-          ignoredPaths.length > 0 &&
-          ignoredPaths.some(path => filePath.includes(path));
-
-        if (isSingleIgnoredPath || isMultipleIgnoredPaths) {
-          current = current.return;
-          continue;
-        }
-
-        const key = `${filePath}:${source?.lineNumber}:${source?.columnNumber}`;
-        if (printed.has(key)) {
-          current = current.return;
-          continue;
-        }
-
-        printed.add(key);
-
-        if (mode === 'copy') {
-          navigator.clipboard.writeText(filePath);
-          showPopup();
-        }
-
-        if (mode === 'vscode') {
-          const vscodeUrl = getVSCodeLink(filePath, source.lineNumber, IDEType);
-          const a = document.createElement('a');
-          a.href = vscodeUrl;
-          a.click();
-        }
-
-        setMode(null);
         return;
       }
 
-      if (!hasSourceInfo) {
-        console.warn(
-          '[React Inspector] No source information found for the clicked element. ' +
-            'It needs a React 18 development build with JSX source info (_debugSource); React 19 is not supported.',
-        );
+      const { filePath, line } = result;
+
+      if (mode === 'copy') {
+        navigator.clipboard.writeText(filePath);
+        showPopup();
       }
+
+      if (mode === 'vscode') {
+        const vscodeUrl = getVSCodeLink(filePath, line, IDEType);
+        const a = document.createElement('a');
+        a.href = vscodeUrl;
+        a.click();
+      }
+
+      setMode(null);
     };
 
     document.addEventListener('click', handleClick, true);
