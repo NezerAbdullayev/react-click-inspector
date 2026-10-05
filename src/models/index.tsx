@@ -1,6 +1,7 @@
 import { CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
 import { IdeType } from "../utils";
 
+export type InspectorMode = 'copy' | 'vscode' | null;
 
 export interface ISettingsModalProps {
   icon?: ReactNode;
@@ -11,6 +12,7 @@ export interface ISettingsModalProps {
 export interface IReactClickInspector extends ISettingsModalProps {
   children: ReactNode;
   ignoredPaths?: string | string[];
+  enabled?: boolean;
 }
 
 export interface IDevInspectorProvider {
@@ -22,10 +24,8 @@ export interface IDevInspectorProvider {
 
 
 export interface DevInspectorContextType {
-  logOnly: boolean;
-  openInVSCode: boolean;
+  mode: InspectorMode;
   IDEType: IdeType | undefined;
-  setLogOnly: Dispatch<SetStateAction<boolean>>;
-  setOpenInVSCode: Dispatch<SetStateAction<boolean>>;
+  setMode: Dispatch<SetStateAction<InspectorMode>>;
   setIDEType: Dispatch<SetStateAction<IdeType | undefined>>;
 };

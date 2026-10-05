@@ -1,30 +1,30 @@
 import { useEffect, useRef } from 'react';
-import { getFiberFromDom, getVSCodeLink, IdeType } from '../utils';
+import { getFiberFromDom, getVSCodeLink, IdeType, IFiber } from '../utils';
+import { InspectorMode } from '../models';
 
 export interface IUseClickInspector {
-  setOpenInVSCode: (value: boolean) => void;
+  mode: InspectorMode;
+  setMode: (value: InspectorMode) => void;
   ignoredPaths?: string | string[];
-  openInVSCode: boolean;
-  setLogOnly: (value: boolean) => void;
   showPopup: () => void;
-  logOnly?: boolean;
   IDEType?: IdeType | undefined;
 }
 export const useClickInspector = ({
-  setOpenInVSCode,
-  setLogOnly,
-  openInVSCode,
+  mode,
+  setMode,
   ignoredPaths,
   showPopup,
-  logOnly,
   IDEType,
 }: IUseClickInspector): void => {
 
-  const latest = useRef({ ignoredPaths, showPopup, IDEType, setLogOnly, setOpenInVSCode });
-  latest.current = { ignoredPaths, showPopup, IDEType, setLogOnly, setOpenInVSCode };
+  const latest = useRef({ ignoredPaths, showPopup, IDEType, setMode });
 
   useEffect(() => {
-    if (!logOnly && !openInVSCode) return;
+    latest.current = { ignoredPaths, showPopup, IDEType, setMode };
+  });
+
+  useEffect(() => {
+    if (!mode) return;
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -40,7 +40,7 @@ export const useClickInspector = ({
       e.preventDefault();
       e.stopPropagation();
 
-      const { ignoredPaths, showPopup, IDEType, setLogOnly, setOpenInVSCode } = latest.current;
+      const { ignoredPaths, showPopup, IDEType, setMode } = latest.current;
 
       const fiber = getFiberFromDom(target);
       if (!fiber) {
@@ -48,17 +48,20 @@ export const useClickInspector = ({
         return;
       }
 
-      let current = fiber;
+      let current: IFiber | null = fiber;
+      let hasSourceInfo = false;
       const printed = new Set();
 
       while (current) {
         const source = current._debugSource;
         const filePath = source?.fileName;
 
-        if (!filePath) {
+        if (!source || !filePath) {
           current = current.return;
           continue;
         }
+
+        hasSourceInfo = true;
 
         const isSingleIgnoredPath =
           typeof ignoredPaths === 'string' && filePath.includes(ignoredPaths);
@@ -80,21 +83,27 @@ export const useClickInspector = ({
 
         printed.add(key);
 
-        if (logOnly) {
+        if (mode === 'copy') {
           navigator.clipboard.writeText(filePath);
           showPopup();
-          setLogOnly(false);
         }
 
-        if (openInVSCode) {
+        if (mode === 'vscode') {
           const vscodeUrl = getVSCodeLink(filePath, source.lineNumber, IDEType);
           const a = document.createElement('a');
           a.href = vscodeUrl;
           a.click();
-          setOpenInVSCode(false);
         }
 
-        break;
+        setMode(null);
+        return;
+      }
+
+      if (!hasSourceInfo) {
+        console.warn(
+          '[React Inspector] No source information found for the clicked element. ' +
+            'It needs a React 18 development build with JSX source info (_debugSource); React 19 is not supported.',
+        );
       }
     };
 
@@ -102,5 +111,5 @@ export const useClickInspector = ({
     return () => {
       document.removeEventListener('click', handleClick, true);
     };
-  }, [logOnly, openInVSCode]);
+  }, [mode]);
 };

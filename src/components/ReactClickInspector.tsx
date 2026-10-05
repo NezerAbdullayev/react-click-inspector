@@ -11,8 +11,10 @@ export const ReactClickInspector: FC<IReactClickInspector> = ({
   modalCss,
   toggleBtnCss,
   ignoredPaths,
+  enabled,
 }) => {
-  const permissions = useIsLocalhost();
+  const isLocalhost = useIsLocalhost();
+  const permissions = enabled ?? isLocalhost;
   const [popupVisible, setPopupVisible] = useState(false);
   const popupTimer = useRef<ReturnType<typeof setTimeout>>();
 
