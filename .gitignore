@@ -18,3 +18,7 @@ Thumbs.db
 
 .vscode/
 .idea/
+
+# Playwright
+extension/e2e/test-results/
+extension/e2e/playwright-report/

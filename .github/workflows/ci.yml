@@ -20,3 +20,23 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run ext:build
+      - run: npm run ext:test
+      - run: npm run ext:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-test-results
+          path: extension/e2e/test-results/
+          retention-days: 7
