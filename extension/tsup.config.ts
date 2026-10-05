@@ -23,7 +23,7 @@ const shared: Options = {
   outExtension: () => ({ js: '.js' }),
 };
 
-export default defineConfig(() => {
+export default defineConfig((): Options[] => {
   rmSync(outDir, { recursive: true, force: true });
 
   return [
