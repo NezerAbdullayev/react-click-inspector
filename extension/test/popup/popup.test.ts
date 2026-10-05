@@ -175,7 +175,9 @@ describe('popup settings', () => {
     if (!ignored || !editorPath || !highlight) throw new Error('missing inputs');
 
     ignored.value = ' ui, lib ,, ';
+    ignored.dispatchEvent(new Event('change', { bubbles: true }));
     editorPath.value = '__custom';
+    editorPath.dispatchEvent(new Event('change', { bubbles: true }));
     highlight.checked = false;
     highlight.dispatchEvent(new Event('change', { bubbles: true }));
 
@@ -186,8 +188,27 @@ describe('popup settings', () => {
         highlight: false,
       }),
     );
+    await vi.waitFor(() => expect(root.querySelector<HTMLElement>('[data-role="saved"]')?.hidden).toBe(false));
     expect(ignored.value).toBe('ui, lib');
     expect(editorPath.value).toBe('/__custom');
+  });
+
+  it('does not overwrite a field that is being edited', async () => {
+    await initPopup(root);
+    const ignored = input('ignoredPaths');
+    const editorPath = input('openInEditorPath');
+    if (!ignored || !editorPath) throw new Error('missing inputs');
+
+    ignored.value = 'ui';
+    ignored.dispatchEvent(new Event('change', { bubbles: true }));
+    editorPath.focus();
+    editorPath.value = '/__typing';
+
+    await vi.waitFor(() => expect(root.querySelector<HTMLElement>('[data-role="saved"]')?.hidden).toBe(false));
+    expect(editorPath.value).toBe('/__typing');
+    expect(chromeMock.storage.sync.data.get(SETTINGS_STORAGE_KEY)).toEqual(
+      expect.objectContaining({ ignoredPaths: ['ui'] }),
+    );
   });
 
   it('shows default settings when nothing is stored', async () => {

@@ -9,6 +9,10 @@ import {
 } from './shared/messages';
 import { IExtensionSettings, loadSettings, onSettingsChanged } from './shared/settings';
 
+interface IBridgeWindow extends Window {
+  __rciContentBridge?: boolean;
+}
+
 let cachedStatus: IPageStatus | null = null;
 let currentSettings: IExtensionSettings | null = null;
 
@@ -29,7 +33,7 @@ const sendSettings = (settings: IExtensionSettings) => {
   postToPage({ source: MESSAGE_SOURCE, type: 'settings', settings });
 };
 
-window.addEventListener('message', (event: MessageEvent<unknown>) => {
+const handlePageMessage = (event: MessageEvent<unknown>) => {
   if (event.source !== window || !isPageToBridge(event.data)) return;
   const data = event.data;
 
@@ -44,9 +48,13 @@ window.addEventListener('message', (event: MessageEvent<unknown>) => {
   }
 
   notifyRuntime(data);
-});
+};
 
-chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+const handleRuntimeMessage = (
+  message: unknown,
+  _sender: chrome.runtime.MessageSender,
+  sendResponse: (response?: unknown) => void,
+) => {
   if (!isRuntimeRequest(message)) return;
 
   if (message.type === 'set-mode') {
@@ -61,8 +69,14 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
 
   postToPage({ source: MESSAGE_SOURCE, type: 'ping' });
   sendResponse({ ...DEFAULT_PAGE_STATUS });
-});
+};
 
-onSettingsChanged(sendSettings);
+const bridgeWindow = window as IBridgeWindow;
 
-loadSettings().then(sendSettings, ignore);
+if (!bridgeWindow.__rciContentBridge) {
+  bridgeWindow.__rciContentBridge = true;
+  window.addEventListener('message', handlePageMessage);
+  chrome.runtime.onMessage.addListener(handleRuntimeMessage);
+  onSettingsChanged(sendSettings);
+  loadSettings().then(sendSettings, ignore);
+}

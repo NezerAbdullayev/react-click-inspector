@@ -191,22 +191,34 @@ export const initPopup = async (root: HTMLElement): Promise<void> => {
       });
   });
 
-  const persistSettings = async () => {
-    const saved = await saveSettings({
-      ignoredPaths: ignoredInput.value.split(','),
-      openInEditorPath: editorPathInput.value,
-      highlight: highlightInput.checked,
-    });
-    fillSettings(saved);
-    savedEl.hidden = false;
+  const showNormalizedValue = (field: EventTarget | null, settings: IExtensionSettings) => {
+    if (field === document.activeElement) return;
+    if (field === ignoredInput) ignoredInput.value = settings.ignoredPaths.join(', ');
+    if (field === editorPathInput) editorPathInput.value = settings.openInEditorPath;
+  };
+
+  let saveQueue: Promise<void> = Promise.resolve();
+
+  const persistSettings = (field: EventTarget | null) => {
+    saveQueue = saveQueue
+      .then(async () => {
+        const saved = await saveSettings({
+          ignoredPaths: ignoredInput.value.split(','),
+          openInEditorPath: editorPathInput.value,
+          highlight: highlightInput.checked,
+        });
+        showNormalizedValue(field, saved);
+        savedEl.hidden = false;
+      })
+      .catch(error => console.warn('[react-click-inspector]', error));
   };
 
   form.addEventListener('submit', event => {
     event.preventDefault();
-    void persistSettings();
+    persistSettings(null);
   });
-  form.addEventListener('change', () => {
-    void persistSettings();
+  form.addEventListener('change', event => {
+    persistSettings(event.target);
   });
 
   chrome.runtime.onMessage.addListener((message: unknown, sender) => {

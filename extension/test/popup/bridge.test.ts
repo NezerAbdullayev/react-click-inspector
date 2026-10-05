@@ -26,6 +26,7 @@ const loadBridge = async () => {
 
 beforeEach(() => {
   vi.resetModules();
+  Reflect.deleteProperty(window, '__rciContentBridge');
   chromeMock = getChromeMock();
   windowListeners = [];
   const addEventListener = window.addEventListener.bind(window);
@@ -55,6 +56,15 @@ describe('content-bridge settings', () => {
         '*',
       ),
     );
+  });
+
+  it('attaches listeners only once when injected twice', async () => {
+    await loadBridge();
+    vi.resetModules();
+    await import('../../src/content-bridge');
+
+    expect(chromeMock.runtime.onMessage.listeners()).toHaveLength(1);
+    expect(chromeMock.storage.onChanged.listeners()).toHaveLength(1);
   });
 
   it('resends settings when they change', async () => {
